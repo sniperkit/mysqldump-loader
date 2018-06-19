@@ -105,7 +105,7 @@ WORKDIR ${PROG_HOME}
 ## Copy files in the container & build targets
 #########################################################
 
-# Copy git2etcd binary to /opt/${PROG_HOME}/bin
+# Copy program binary to /opt/${PROG_HOME}/bin
 COPY --from=builder ${PROG_REPO_URI_ABS}/bin ${PROG_HOME}/bin
 COPY ./shared/config ${PROG_HOME}/config
 
