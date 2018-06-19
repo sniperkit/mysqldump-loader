@@ -1,0 +1,3 @@
+package: github.com/sniperkit/mysqldump-loader
+import:
+- package: github.com/go-sql-driver/mysql
