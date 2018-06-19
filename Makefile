@@ -17,7 +17,7 @@ RUNTIME_OS_NAME 			?= $(shell uname -s)
 ## local - build
 
 ## program
-PROG_NAME 					:= zoekt
+PROG_NAME 					:= mysqldump-loader
 PROG_NAME_SUFFIX 			:= 
 PROG_SRCS 					:= $(shell git ls-files '*.go' | grep -v '^vendor/')
 
@@ -42,7 +42,7 @@ DOCKER_BIN_FILE_PATH 		:= $(DOCKER_PREFIX_DIR)/$(BIN_BASE_NAME)
 
 #### image
 DOCKER_IMAGE_OWNER 			:= sniperkit
-DOCKER_IMAGE_BASENAME 		:= zoekt
+DOCKER_IMAGE_BASENAME 		:= mysqldump-loader
 DOCKER_IMAGE_TAG 			:= 3.7-alpine
 DOCKER_IMAGE 				:= $(DOCKER_IMAGE_OWNER)/$(DOCKER_IMAGE_BASENAME):$(DOCKER_IMAGE_TAG)
 DOCKER_MULTI_STAGE_IMAGE 	:= $(DOCKER_IMAGE_OWNER)/$(DOCKER_IMAGE_BASENAME)-multi:$(DOCKER_IMAGE_TAG)
@@ -53,7 +53,7 @@ DOCKER_MULTI_STAGE_IMAGE 	:= $(DOCKER_IMAGE_OWNER)/$(DOCKER_IMAGE_BASENAME)-mult
 # vcs
 REPO_VCS 		:= github.com
 REPO_OWNER 		:= sniperkit
-REPO_NAME 		:= zoekt
+REPO_NAME 		:= mysqldump-loader
 REPO_URI 		:= $(REPO_VCS)/$(REPO_OWNER)/$(REPO_NAME)
 REPO_BRANCH 	:= $(subst heads/,,$(shell git rev-parse --abbrev-ref HEAD 2>/dev/null))
 
@@ -164,6 +164,7 @@ info-docker:
 
 docker-%: docker-$*
 
+.PHONY: docker
 docker: docker-build  # docker-tag docker-commit docker-push ## Generate, tag and push a new docker image for this program.
 
 docker-quick: docker-build docker-run ## Build and run quickly a docker container for this program
@@ -196,6 +197,7 @@ define docker_build_cmd
     echo "--------------------"
 endef
 
+.PHONY: run
 docker-run: ## Run docker container locally
 	@docker run -ti --rm $(DOCKER_IMAGE)
 
@@ -230,11 +232,15 @@ define install_cmd
 	go install -ldflags "$(BUILD_LDFLAGS)" $(REPO_URI)/cmd/$(1) && echo "- Path: $(GOPATH)/src/$(1)";
 endef
 
-GOX_OSARCH_LIST := "darwin/386 darwin/amd64 linux/386 linux/amd64 linux/arm freebsd/386 freebsd/amd64 freebsd/arm netbsd/386 netbsd/amd64 netbsd/arm openbsd/386 openbsd/amd64 openbsd/arm windows/386 windows/amd64"
+GOX_OSARCH_LIST := darwin/386 darwin/amd64 linux/386 linux/amd64 linux/arm freebsd/386 freebsd/amd64 freebsd/arm netbsd/386 netbsd/amd64 netbsd/arm openbsd/386 openbsd/amd64 openbsd/arm windows/386 windows/amd64
 GOX_CMD_LIST := $(shell ls -1 $(CURDIR)/cmd)
 
-dist-gox: ## Build all dist binaries for linux, darwin in amd64 arch.
-	gox -ldflags="$(BUILD_LDFLAGS)" -osarch="$(GOX_OSARCH_LIST)" -output="$(DIST_PREFIX_DIR)/{{.Dir}}_{{.OS}}_{{.Arch}}" $(REPO_URI)/cmd/...
+GO_GOX := $(shell which gox)
+
+.PHONY: dist
+dist: ## Build all dist binaries for linux, darwin in amd64 arch.
+	@if [ "$(GO_GOX)" == "" ]; then go get -v github.com/mitchellh/gox ; else echo "gox: $(GO_GOX)"; fi
+	$(GO_GOX) -ldflags="$(BUILD_LDFLAGS_ALL)" -osarch="$(GOX_OSARCH_LIST)" -output="$(DIST_PREFIX_DIR)/{{.Dir}}_{{.OS}}_{{.Arch}}" $(REPO_URI)/cmd/...
 
 version-current: ## Check current version of command build
 	@which $(BIN_BASE_NAME)
