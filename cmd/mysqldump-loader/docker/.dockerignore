@@ -1,5 +1,5 @@
 #### test
-!dtk-fetch.cli-linux
+!mysqldump-loader-linux
 !nsswitch.conf
 *darwin*
 *windows*
