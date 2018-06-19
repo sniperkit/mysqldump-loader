@@ -1,0 +1,17 @@
+FROM alpine:3.7
+
+# container deps
+RUN apk update \
+	&& apk add --no-cache --no-progress ca-certificates \
+	&& rm -rf /var/cache/apk/* \
+	&& mkdir -p /dfk
+
+# container binary
+ADD ./dtk-fetch.cli-linux /dfk/fetch.cli
+
+# container configuration
+WORKDIR /dfk
+EXPOSE 8000
+ENTRYPOINT /dfk/fetch.cli
+
+# CMD [""]
